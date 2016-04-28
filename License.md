@@ -1,6 +1,8 @@
 This software makes use of Node.js and subcomponents under their respective licenses. No permisions to this project are granted
 beyond those specified in the aforementioned licenses, with the following exceptions:
+
 Permissions as necessary or otherwise specified in terms of service of git, GitHub, etc.
+
 Permission to copy, use, or modify for personal, academic, or other non-commercial uses is granted to all involved in SEIS 785, section 1, Spring 2016 semester at UST
 
 #### 3rd-party licenses:
