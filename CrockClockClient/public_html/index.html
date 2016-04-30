@@ -1,0 +1,20 @@
+<html>
+    <head>
+        <title>CrockClock Client</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script type="text/javascript" src="lib/knockout-3.4.0.js"></script>
+        <script type="text/javascript" src="lib/jquery-2.2.3.min.js"></script>
+        <script type="text/javascript" src="js/main.js"></script>
+    </head>
+    <body>
+        <script data-bind="attr: {id: loginViewId}" type="text/html">
+            <span data-bind="visible: loginError">Username/Password does not match</span>
+            <input type="text" data-bind="attr: {id: usernameFieldId, textInput: username}"/>
+            <input type="password" data-bind="attr: {id: passwordFieldId}, textInput: password"/>
+            <button data-bind="click: submitLogin">Login</button>
+        </script>
+        <script data-bind="attr: {id: scheduleViewId}" type="text/html"></script>
+        <div data-bind="template: activeContent"></div>
+    </body>
+</html>
