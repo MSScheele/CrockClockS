@@ -1,4 +1,4 @@
-This software makes use of Node.js, Knockout, and thier subcomponents under their respective licenses. No permisions to this project are granted beyond those specified in the aforementioned licenses except as follows:
+This software makes use of libraries from Node.js, Knockout, jQuery, and Particle under their respective licenses. No permisions to this project are granted beyond those specified in the aforementioned licenses except as follows:
 
 Permissions as necessary or otherwise specified in terms of service of git, GitHub, etc.
 
