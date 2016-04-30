@@ -1,22 +1,25 @@
-new function () {
+function StreamEater() {
+}
 
-    function StreamEater() {
-    }
-
-    StreamEater.consumeStream = function (stream) {
-        return new Promise(function (resolve, reject) {
-            var data = '';
-            stream.on('data', function (chunk) {
+StreamEater.consumeStream = function (stream) {
+    return new Promise(function (resolve, reject) {
+        var data = '';
+        stream.on('readable', function () {
+            var chunk = stream.read();
+            if (chunk !== null) {
                 data += chunk;
-            });
-            stream.on('close', function () {
+            } else {
                 resolve(data);
-            });
-            stream.on('error', function (error) {
-                reject(error);
-            });
+            }
         });
-    };
+        stream.on('close', function () {
+            resolve(data);
+        });
+        stream.on('error', function (error) {
+            reject(error);
+        });
+        stream.resume();
+    });
+};
 
-    return StreamEater;
-}();
+module.exports = StreamEater;

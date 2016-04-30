@@ -1,36 +1,40 @@
-new function (HTTP, URL, ParticleConnection, EventManager) {
+var HTTP = require('http');
+var URL = require('url');
+var ParticleConnection = require('./ParticleConnection');
+var EventManager = require('./EventManager');
 
-    var connection = new ParticleConnection();
-    var eventManager = new EventManager(connection);
+var connection = new ParticleConnection();
+var eventManager = new EventManager(connection);
 
-    var routing = {
-        'login': connection.handleLogin,
-        'queueEvent': eventManager.queueEvent
-    };
+connection.whenOnline().then(function() {
+    eventManager.start();
+});
 
-    function handleRequest(request, response) {
-        var method = request.method;
-        if (method === 'OPTIONS') {
-            console.log(method.headers); //TODO: CORS header responses?
-        } else {
-            var parsedUrl = URL.parse(request.url);
-            var path = parsedUrl.path;
-            routeRequest(path, request, response);
-        }
+var routing = {
+    'login': function() {connection.handleLogin.apply(connection, arguments);},
+    'queueEvent': function() {eventManager.queueEvent.apply(eventManager, arguments);}
+};
+
+function handleRequest(request, response) {
+    var method = request.method;
+    if (method === 'OPTIONS') {
+        console.log(method.headers); //TODO: CORS header responses? Yes...
+    } else {
+        response.setHeader('Access-Control-Allow-Origin', '*');
+        var parsedUrl = URL.parse(request.url);
+        var path = parsedUrl.path.substring(1); //Chop off leading slash
+        routeRequest(path, request, response);
     }
+}
 
-    function routeRequest(path, request, response) {
-        if (routing[path]) {
-            routing[path](request, response);
-        } else {
-            response.writeHead('404');
-            response.end(); //Redundant? Is this part of writeHead?
-        }
+function routeRequest(path, request, response) {
+    if (routing[path]) {
+        routing[path](request, response);
+    } else {
+        response.writeHead('404');
+        response.end(); //Redundant? Is this part of writeHead?
     }
+}
 
-    var server = HTTP.createServer(handleRequest);
-    server.listen('8080');
-}(require('http'),
-        require('url'),
-        require('ParticleConnection'),
-        require('EventManager'));
+var server = HTTP.createServer(handleRequest);
+server.listen('8080');
