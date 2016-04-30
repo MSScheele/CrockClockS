@@ -33,11 +33,13 @@ $(document).ready(function() {
     };
     
     CrockClockClient.prototype.handleLoginSuccess = function() {
+        console.log(arguments);
         this.activeContent(this.scheduleViewId);
         this.loginError(false);
     };
     
     CrockClockClient.prototype.handleLoginFailure = function() {
+        console.log(arguments);
         this.loginError(true);
     };
     

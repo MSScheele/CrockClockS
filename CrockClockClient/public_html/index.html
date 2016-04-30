@@ -10,7 +10,7 @@
     <body>
         <script data-bind="attr: {id: loginViewId}" type="text/html">
             <span data-bind="visible: loginError">Username/Password does not match</span>
-            <input type="text" data-bind="attr: {id: usernameFieldId, textInput: username}"/>
+            <input type="text" data-bind="attr: {id: usernameFieldId}, textInput: username"/>
             <input type="password" data-bind="attr: {id: passwordFieldId}, textInput: password"/>
             <button data-bind="click: submitLogin">Login</button>
         </script>
