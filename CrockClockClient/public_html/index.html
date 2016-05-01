@@ -4,17 +4,49 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script type="text/javascript" src="lib/knockout-3.4.0.js"></script>
-        <script type="text/javascript" src="lib/jquery-2.2.3.min.js"></script>
+        <script src="lib/jquery-ui-1.11.4/external/jquery/jquery.js" type="text/javascript"></script>
+        <script src="lib/jquery-ui-1.11.4/jquery-ui.js" type="text/javascript"></script>
+        <script src="lib/timepicker/jquery.timepicker.min.js" type="text/javascript"></script>
         <script type="text/javascript" src="js/main.js"></script>
+        <link href="lib/jquery-ui-1.11.4/jquery-ui.css" rel="stylesheet" type="text/css"/>
+        <link href="lib/timepicker/jquery.timepicker.css" rel="stylesheet" type="text/css"/>
     </head>
     <body>
         <script data-bind="attr: {id: loginViewId}" type="text/html">
-            <span data-bind="visible: loginError">Username/Password does not match</span>
-            <input type="text" data-bind="attr: {id: usernameFieldId}, textInput: username"/>
-            <input type="password" data-bind="attr: {id: passwordFieldId}, textInput: password"/>
+            <div data-bind="visible: loginError">Invalid username/password combination</div>
+            <div>
+                <label data-bind="attr: {for: usernameFieldId}">Username</label>
+                <input type="passord" data-bind="attr: {id: usernameFieldId}, textInput: username"/>
+            </div>
+            <div>
+                <label data-bind="attr: {for: passwordFieldId}">Password</label>
+                <input type="password" data-bind="attr: {id: passwordFieldId}, textInput: password"/>
+            </div>
             <button data-bind="click: submitLogin">Login</button>
         </script>
-        <script data-bind="attr: {id: scheduleViewId}" type="text/html"></script>
+        <script data-bind="attr: {id: scheduleViewId}" type="text/html">
+            <div>
+                <label data-bind="attr: {for: deviceSelectId}">Device</label>
+                <select data-bind="attr: {id: deviceSelectId}, options: devices, optionsText: function(item) {
+                return item.name;
+            }, value: selectedDevice"></select>
+            </div>
+            <div>
+                <label data-bind="attr: {for: datePickerId}">Date</label>
+                <input type="text" data-bind="attr: {id: datePickerId}"/>
+            </div>
+            <div>
+                <label data-bind="attr: {for: timePickerId}">Time</label>
+                <input type="text" data-bind="attr: {id: timePickerId}"/>
+            </div>
+            <div>
+                <label data-bind="attr: {for: settingSelectId}">Device</label>
+                <select data-bind="attr: {id: settingSelectId}, options: devices, optionsText: function(item) {
+                return item.label;
+            }, value: selectedSetting"></select>
+            </div>
+            <button data-bind="click: submitEvent">Schedule Event</button>
+        </script>
         <div data-bind="template: activeContent"></div>
     </body>
 </html>
