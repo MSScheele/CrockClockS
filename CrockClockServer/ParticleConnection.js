@@ -80,7 +80,7 @@ ParticleConnection.prototype.scheduleEvent = function (deviceId, event) {
     var argument = event.time + '|' + event.mode + '|' + event.eventId;
     return this.particle.callFunction({
         deviceId: deviceId,
-        name: this.SCHEDULE_FUNC,
+        name: ParticleConnection.SCHEDULE_FUNC,
         argument: argument,
         auth: this.token
     });
