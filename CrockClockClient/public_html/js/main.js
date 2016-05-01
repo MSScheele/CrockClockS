@@ -45,7 +45,7 @@ $(document).ready(function() {
         this.selectedDevice = ko.observable();
         
         this.settings = ko.observableArray(CrockClockClient.DEVICE_SETTINGS);
-        this.selectedSetting = CrockClockClient.DEVICE_SETTINGS[0];
+        this.selectedSetting = ko.observable(CrockClockClient.DEVICE_SETTINGS[0]);
         
         this.activeContent = ko.observable(this.loginViewId);
     }
@@ -121,13 +121,13 @@ $(document).ready(function() {
         var self = this;
         var baseDate = $('#'+this.datePickerId).datepicker('getDate');
         var dateTime = $('#'+this.timePickerId).timepicker('getTime', baseDate);
-        
+        //TODO: Timezones?
         var data = {
-            mode: this.selectedSetting().id,
+            mode: this.selectedSetting().value,
             deviceId : this.selectedDevice().id,
-            date: dateTime
+            time: dateTime.getTime()
         };
-        
+        console.log(data);
         var url = CrockClockClient.SERVER_HOST+CrockClockClient.ENDPOINT_QUEUE;
         $.ajax(url, {
             method: 'POST',

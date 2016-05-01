@@ -40,12 +40,12 @@
                 <input type="text" data-bind="attr: {id: timePickerId}"/>
             </div>
             <div>
-                <label data-bind="attr: {for: settingSelectId}">Device</label>
-                <select data-bind="attr: {id: settingSelectId}, options: devices, optionsText: function(item) {
+                <label data-bind="attr: {for: settingSelectId}">Mode</label>
+                <select data-bind="attr: {id: settingSelectId}, options: settings, optionsText: function(item) {
                 return item.label;
             }, value: selectedSetting"></select>
             </div>
-            <button data-bind="click: submitEvent">Schedule Event</button>
+            <button data-bind="click: scheduleEvent">Schedule Event</button>
         </script>
         <div data-bind="template: activeContent"></div>
     </body>
