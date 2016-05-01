@@ -9,7 +9,7 @@ var nextEventId = 0;
  * Events have the following structure:
  * {
  *      time: UNIX timestamp
- *      action: 0: Off, 1: High 4h 2: High 6h 3: Low 6h 4: Low 8h 5: Warm
+ *      action: 0: Off, 1: High 4h 2: High 6h 3: Low 8h 4: Low 10h 5: Warm
  *      eventId: Internally set as a unique ID (via iteration over integers)
  * }
  * 
@@ -80,13 +80,13 @@ EventManager.prototype._isDeviceActive = function (deviceId) {
  */
 EventManager.prototype.queueEvent = function (request, response) {
     if (request.method !== 'POST') {
-        response.write('Method not supported');
         response.writeHead('405');
+        response.write('Method not supported');
         response.end();
     }
     if (!this.connection.isOnline) {
-        response.write('Not logged in. Call login first.');
         response.writeHead('400');
+        response.write('Not logged in. Call login first.');
         response.end();
     }
     var body = StreamEater.consumeStream(request);
@@ -97,6 +97,8 @@ EventManager.prototype.queueEvent = function (request, response) {
     };
     //TODO: Validation/error handling
     this._queueEventInternal(data.deviceId, newEvent);
+    response.writeHead('201');
+    response.end();
 };
 
 /**

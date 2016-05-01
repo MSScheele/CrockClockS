@@ -12,13 +12,18 @@ connection.whenOnline().then(function() {
 
 var routing = {
     'login': function() {connection.handleLogin.apply(connection, arguments);},
-    'queueEvent': function() {eventManager.queueEvent.apply(eventManager, arguments);}
+    'queueEvent': function() {eventManager.queueEvent.apply(eventManager, arguments);},
+    'devices': function() {connection.listAvailableDevices.apply(connection, arguments);}
 };
 
 function handleRequest(request, response) {
     var method = request.method;
     if (method === 'OPTIONS') {
-        console.log(method.headers); //TODO: CORS header responses? Yes...
+        response.setHeader('Access-Control-Allow-Origin', request.headers['origin']);
+        response.setHeader('Access-Control-Allow-Headers', request.headers['access-control-request-headers']);
+        response.setHeader('Access-Control-Allow-Method', request.headers['access-control-request-method']);
+        response.writeHead('200');
+        response.end();
     } else {
         response.setHeader('Access-Control-Allow-Origin', '*');
         var parsedUrl = URL.parse(request.url);
@@ -32,7 +37,7 @@ function routeRequest(path, request, response) {
         routing[path](request, response);
     } else {
         response.writeHead('404');
-        response.end(); //Redundant? Is this part of writeHead?
+        response.end();
     }
 }
 

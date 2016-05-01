@@ -9,9 +9,12 @@ ParticleConnection.KEEP_ALIVE = 'keepAlive';
 function ParticleConnection() {
     var self = this;
 
+    this.token = null;
     this.particle = new Particle();
     this._onlinePromise = new Promise(function (resolve) {
-        self._resolveOnlinePromise = resolve;
+        self._resolveOnlinePromise = function () {
+            resolve();
+        };
     });
 }
 
@@ -27,14 +30,14 @@ ParticleConnection.prototype.handleLogin = function (request, response) {
     var self = this;
     if (request.method === 'POST') {
         StreamEater.consumeStream(request).then(function (body) {
-            var data = JSON.parse(body.length>0? body : '{}');
+            var data = JSON.parse(body.length > 0 ? body : '{}');
             var username = data.username;
             var password = data.password;
             self._login(username, password, response);
         });
     } else {
-        response.write('Method not supported');
         response.writeHead('405');
+        response.write('Method not supported');
         response.end();
     }
 };
@@ -53,14 +56,14 @@ ParticleConnection.prototype._login = function (username, password, response) {
             function (data) {
                 self.token = data.body.access_token;
                 self._resolveOnlinePromise();
-                console.log('Login successful. Token recieved:' + token);
+                console.log('Login successful. Token recieved:' + self.token);
                 response.writeHead('200');
                 response.end();
             },
             function (err) {
                 console.log('API call completed on promise fail: ', err);
                 response.writeHead('401');
-                console.log(response.write(JSON.stringify(err), 'utf-8'));
+                response.write(JSON.stringify(err));
                 response.end();
             });
 };
@@ -128,6 +131,26 @@ ParticleConnection.prototype.getDeviceOnlineStream = function () {
         name: eventName,
         auth: this.token
     });
+};
+
+ParticleConnection.prototype.listAvailableDevices = function (request, response) {
+    if (request.method === 'GET') {
+        this.particle.listDevices({
+            auth: this.token
+        }).then(function (devices) {
+            response.writeHead('200');
+            response.write(JSON.stringify(devices));
+            response.end();
+        }, function (error) {
+            response.writeHead('400');
+            response.write(JSON.stringify(error));
+            response.end();
+        });
+    } else {
+        response.writeHead('405');
+        response.write('Method not supported');
+        response.end();
+    }
 };
 
 /**
