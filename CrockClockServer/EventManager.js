@@ -24,7 +24,7 @@ function EventManager(connection) {
     this.deviceStreams = {};
 }
 
-EventManager.prototype.start = function() {
+EventManager.prototype.start = function () {
     this.connection.getDeviceOnlineStream().then(function (stream) {
         stream.on('event', function (data) {
             self.connectDevice(data.deviceId);
@@ -79,26 +79,30 @@ EventManager.prototype._isDeviceActive = function (deviceId) {
  * @returns {undefined}
  */
 EventManager.prototype.queueEvent = function (request, response) {
+    var self = this;
     if (request.method !== 'POST') {
         response.writeHead('405');
         response.write('Method not supported');
         response.end();
+        return;
     }
     if (!this.connection.isOnline) {
         response.writeHead('400');
         response.write('Not logged in. Call login first.');
         response.end();
+        //return;
     }
-    var body = StreamEater.consumeStream(request);
-    var data = JSON.parse(body);
-    var newEvent = {
-        time: data.time,
-        mode: data.mode
-    };
-    //TODO: Validation/error handling
-    this._queueEventInternal(data.deviceId, newEvent);
-    response.writeHead('201');
-    response.end();
+    StreamEater.consumeStream(request).then(function (body) {
+        var data = JSON.parse(body);
+        var newEvent = {
+            time: data.time,
+            mode: data.mode
+        };
+        //TODO: Validation/error handling
+        self._queueEventInternal(data.deviceId, newEvent);
+        response.writeHead('201');
+        response.end();
+    });
 };
 
 /**
@@ -156,20 +160,20 @@ EventManager.prototype._handleEventResponse = function (deviceId, data) {
  * @returns {undefined}
  */
 EventManager.prototype._queueEventInternal = function (deviceId, event) {
-    var queue = this.deviceQueues[deviceId];
-    if (queue) {
-        event.eventId = nextEventId;
-        nextEventId++;
-        for (var i = 0; i < queue.length; i++) {
-            if (queue[i].time > event.time) {
-                queue.splice(i, 0, event);
-                break;
-            }
-        }
-        this._sendEvent(deviceId, event);
-    } else {
-        console.log('Error: Recieved event for nonexistent device');
+    if (this.deviceQueues[deviceId] === undefined) {
+        this.deviceQueues[deviceId] = [];
+        console.log('Recieved event for unknown device');
     }
+    var queue = this.deviceQueues[deviceId];
+    event.eventId = nextEventId;
+    nextEventId++;
+    for (var i = 0; i < queue.length; i++) {
+        if (queue[i].time > event.time) {
+            queue.splice(i, 0, event);
+            break;
+        }
+    }
+    this._sendEvent(deviceId, event);
 };
 
 /**
@@ -190,7 +194,7 @@ EventManager.prototype._sendEvent = function (deviceId, event) {
                     console.log('Anomalous success: ' + response);
                 }
             }, function (error) {
-        console.log('Publish failure: ' + error);
+        console.log('Publish failure: ' + JSON.stringify(error));
     });
 };
 
