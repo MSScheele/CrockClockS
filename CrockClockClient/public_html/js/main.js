@@ -6,7 +6,7 @@ $(document).ready(function() {
     CrockClockClient.ENDPOINT_QUEUE = 'queueEvent';
     
     CrockClockClient.DEVICE_SETTINGS = [{
-            label: 'Off',
+            label: 'Warm',
             value: 0
     },{
             label: 'High 4h',
@@ -20,9 +20,6 @@ $(document).ready(function() {
     },{
             label: 'Low 10h',
             value: 4
-    },{
-            label: 'Warm',
-            value: 5
     }];
     
     function CrockClockClient() {
