@@ -77,7 +77,7 @@ ParticleConnection.prototype._login = function (username, password, response) {
  * @returns {Promise}
  */
 ParticleConnection.prototype.scheduleEvent = function (deviceId, event) {
-    var argument = event.time + '|' + event.mode + '|' + event.eventId;
+    var argument = Math.floor(event.time / 1000) + '|' + event.mode + '|' + event.eventId; //Particle uses time measured in seconds
     return this.particle.callFunction({
         deviceId: deviceId,
         name: ParticleConnection.SCHEDULE_FUNC,
@@ -96,7 +96,7 @@ ParticleConnection.prototype.scheduleEvent = function (deviceId, event) {
 ParticleConnection.prototype.pingDeviceKeepAlive = function (deviceId) {
     return this.particle.callFunction({
         deviceId: deviceId,
-        name: this.KEEP_ALIVE,
+        name: ParticleConnection.KEEP_ALIVE,
         argument: '',
         auth: this.token
     });
@@ -110,7 +110,7 @@ ParticleConnection.prototype.pingDeviceKeepAlive = function (deviceId) {
  * @returns {EventStream}
  */
 ParticleConnection.prototype.getResponseStream = function (deviceId) {
-    var eventName = this.RESPONSE_EVENT;
+    var eventName = ParticleConnection.RESPONSE_EVENT;
     return this.particle.getEventStream({
         deviceId: deviceId,
         name: eventName,
@@ -125,7 +125,7 @@ ParticleConnection.prototype.getResponseStream = function (deviceId) {
  * @returns {EventStream}
  */
 ParticleConnection.prototype.getDeviceOnlineStream = function () {
-    var eventName = this.ONLINE_EVENT;
+    var eventName = ParticleConnection.ONLINE_EVENT;
     return this.particle.getEventStream({
         deviceId: 'mine',
         name: eventName,

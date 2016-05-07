@@ -9,7 +9,7 @@ var nextEventId = 0;
  * Events have the following structure:
  * {
  *      time: UNIX timestamp
- *      action: 0: Off, 1: High 4h 2: High 6h 3: Low 8h 4: Low 10h 5: Warm
+ *      action: 0: Warm, 1: High 4h 2: High 6h 3: Low 8h 4: Low 10h
  *      eventId: Internally set as a unique ID (via iteration over integers)
  * }
  * 
@@ -25,13 +25,17 @@ function EventManager(connection) {
 }
 
 EventManager.prototype.start = function () {
+    var self = this;
     this.connection.getDeviceOnlineStream().then(function (stream) {
+        console.log('Listening for devices');
         stream.on('event', function (data) {
-            self.connectDevice(data.deviceId);
+            self.connectDevice(data.coreid);
         });
     });
 
-    Timers.setInterval(self.keepAlive, 5 * 60 * 1000); //Run keepalive pings every 5 min 
+    Timers.setInterval(function() {
+        self.keepAlive();
+    }, 5 * 60 * 1000); //Run keepalive pings every 5 min 
 };
 
 /**
@@ -42,15 +46,22 @@ EventManager.prototype.start = function () {
  * @returns {undefined}
  */
 EventManager.prototype.keepAlive = function () {
+    var self = this;
+    console.log('Pinging active devices');
     for (var i = 0; i < this.activeDevices.length; i++) {
-        this.connection.pingDeviceKeepAlive(this.activeDevices[i]).then(function (response) {
+        var curItem = i; //Because i changes before callbacks fire
+        this.connection.pingDeviceKeepAlive(this.activeDevices[curItem]).then(function (response) {
             if (response !== 1) {
-                console.log('Invalid keep alive response:' + response + ' from device ' + this.activeDevices[i]);
-                this.activeDevices.splice(i, 1);
+                console.log('Invalid keep alive response:' + response + ' from device ' + this.activeDevices[curItem]);
+                self.deviceStreams[self.activeDevices[curItem]] = null;
+                self.activeDevices.splice(curItem, 1);
             }
         }, function (error) {
-            console.log('Keep-alive error:' + error);
-            this.activeDevices.splice(i, 1);
+            console.log('Keep-alive error:' + JSON.stringify(error));
+            self.deviceStreams[self.activeDevices[curItem]] = null;
+            console.log('Removing item '+curItem);
+            self.activeDevices.splice(curItem, 1);
+            console.log(self.activeDevices);
         });
     }
 };
@@ -115,7 +126,8 @@ EventManager.prototype.queueEvent = function (request, response) {
  */
 EventManager.prototype.connectDevice = function (deviceId) {
     var self = this;
-    if (!this.isDeviceActive(deviceId)) {
+    if (!this._isDeviceActive(deviceId)) {
+        console.log('Device ' + deviceId + ' connected');
         this.activeDevices.push(deviceId);
         if (this.deviceQueues[deviceId]) {
             var queuedEvents = this.deviceQueues[deviceId];
@@ -125,13 +137,19 @@ EventManager.prototype.connectDevice = function (deviceId) {
         } else {
             this.deviceQueues[deviceId] = [];
         }
-        this.connection.openResponseStream(deviceId).then(function (stream) {
-            this.deviceStreams[deviceId] = stream;
-            stream.on('event', function (data) {
-                self._handleEventResponse(deviceId, data.data);
-            });
-        });
+        this.listenForResponses(deviceId);
     }
+};
+
+EventManager.prototype.listenForResponses = function (deviceId) {
+    var self = this;
+    this.connection.getResponseStream(deviceId).then(function (stream) {
+        console.log('Listening for responses from ' + deviceId);
+        self.deviceStreams[deviceId] = stream;
+        stream.on('event', function (data) {
+            self._handleEventResponse(deviceId, data.data);
+        });
+    });
 };
 
 /**
@@ -145,8 +163,10 @@ EventManager.prototype.connectDevice = function (deviceId) {
 EventManager.prototype._handleEventResponse = function (deviceId, data) {
     var queue = this.deviceQueues[deviceId];
     for (var i = 0; i < queue.length; i++) {
-        if ('' + queue[i].eventId === data) { //Event ID is an int internally but a string in payload
+        var event = queue[i];
+        if ('' + event.eventId === data) { //Event ID is an int internally but a string in payload
             queue.splice(i, 1); //Remove from position i
+            console.log('Removed completed event ' + event.eventId);
         }
     }
 };
@@ -162,7 +182,8 @@ EventManager.prototype._handleEventResponse = function (deviceId, data) {
 EventManager.prototype._queueEventInternal = function (deviceId, event) {
     if (this.deviceQueues[deviceId] === undefined) {
         this.deviceQueues[deviceId] = [];
-        console.log('Recieved event for unknown device');
+        this.listenForResponses(deviceId);
+        console.log('Recieved event for unknown device ' + deviceId);
     }
     var queue = this.deviceQueues[deviceId];
     event.eventId = nextEventId;
@@ -172,6 +193,10 @@ EventManager.prototype._queueEventInternal = function (deviceId, event) {
             queue.splice(i, 0, event);
             break;
         }
+    }
+    //Implicit is that we didn't load the event in the loop
+    if (queue.length === 0) {
+        queue.push(event);
     }
     this._sendEvent(deviceId, event);
 };
@@ -186,12 +211,13 @@ EventManager.prototype._queueEventInternal = function (deviceId, event) {
  * @returns {undefined}
  */
 EventManager.prototype._sendEvent = function (deviceId, event) {
+    console.log('Publishing event ID ' + event.eventId + ' to device ' + deviceId);
     this.connection.scheduleEvent(deviceId, event).then(
             function (response) {
-                if (response === 1) {
+                if (response.statusCode === 200) {
                     console.log('Published event ID ' + event.eventId + ' to device ' + deviceId);
                 } else {
-                    console.log('Anomalous success: ' + response);
+                    console.log('Anomalous success: ' + JSON.stringify(response));
                 }
             }, function (error) {
         console.log('Publish failure: ' + JSON.stringify(error));

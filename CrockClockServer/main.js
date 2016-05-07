@@ -7,6 +7,7 @@ var connection = new ParticleConnection();
 var eventManager = new EventManager(connection);
 
 connection.whenOnline().then(function() {
+    console.log('Starting event manager');
     eventManager.start();
 });
 
